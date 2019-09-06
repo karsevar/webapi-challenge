@@ -26,13 +26,89 @@ Demonstrate your understanding of this Sprint's concepts by answering the follow
 
 - [ ] Mention two parts of Express that you learned about this week.
 
+The two particular parts that stuck out to me about express was its flexibility (in the form of being able to write custom middleware within server.use, server.post, server.get, etc. request calls) and the express router portion of the curriculum was very enlightening (since I didn't know that each route services a single resource and that these routes can be understood as components, when interpreted with react). 
+
 - [ ] Describe Middleware?
+
+  Middleware can be defined as simply functions that lives within express server requests. Here is an example ```server.use('/', validateId, (res, req) => ....)```. As you can see there are two functions within the express server invocation (validateId and (res, req) => ...) technically both of these functions can be considered middleware. The characteristic that makes middleware in express so powerful except for customizability is the ability to chain together middleware functions within the express server invocation through the argument ```next```.
+
+  Example: 
+``` 
+  router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
+    console.log(req.user);
+    const postObject = req.body;
+    postObject.user_id = req.user.id;
+    postDb.insert(postObject) 
+        .then(results => {
+            res.status(200).json(results)
+        })
+        .catch(error => {
+            res.status(500).json(error)
+        })
+});
+
+function validateUserId(req, res, next) {
+    const userId = req.params.id;
+
+    userDb.getById(userId) 
+        .then(results => {
+            if (results === undefined) {
+                res.status(400).json({ message: "invalid user id" })
+            } else {
+                req.user = results
+                next();
+            }
+        })
+};
+
+function validatePost(req, res, next) {
+    if (!Object.keys(req.body).length) {
+        res.status(400).json({ message: "missing post data" })
+    } else {
+        if (req.body.text) {
+            next();
+        } else {
+            res.status(400).json({ message: "missing required text field" })
+        }
+    }
+};
+```
+As you can see from the example above through middleware and the next argument I was able to chain three functions together into one long program that first validates if a user id exists in the database, validate if the client fields are inputed correctly, and lastly save the client's fields into the database. 
+
+To finish things up there are two different middleware: 
+    regular middleware (which I illustrated above) 
+    error handling middleware (which takes in the argument err and passes the err argument into the next argument).
 
 - [ ] Describe a Resource?
 
+A resource is a designation used by REST to describe what tasks you want to automate for the user or rather what things you want the user to see in your api system. Resources are the standard in which developers split up their applications into different unique endpoints (since each resource has to have its own url endpoint).
+
 - [ ] What can the API return to help clients know if a request was successful?
 
+Successful requests usually come with a status code 200 or 201 and in addition it might be wise to include an additional message in the form of {message: 1}, where 1 means the request was a success.
+
 - [ ] How can we partition our application into sub-applications?
+
+We can partition our application into different routes using express router functionality where each resource has its own file and route within the server. Example of this convention:
+``` 
+const router = express.Router();
+
+router.use(express.json());
+
+router.get('/', (req, res) => {
+    projectDb.get()
+        .then(results => {
+            res.status(200).json(results) 
+        })
+        .catch(error => {
+            res.status(500).json(error) 
+        })
+});
+
+module.exports = server;
+```
+and in a server.js file that is located at the root you import the above module and include the route within the server through the command
+```server.use('/projects', projectRoutes)```
 
 ## Project Setup
 
