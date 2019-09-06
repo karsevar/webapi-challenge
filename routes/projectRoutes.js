@@ -56,6 +56,16 @@ router.put('/:id', validateProjectId, validateProjectPost, (req, res) => {
         })
 });
 
+router.get('/actionproject/:id', validateProjectId, (req, res) => {
+    projectDb.getProjectActions(req.params.id) 
+        .then(results => {
+            res.status(200).json(results)
+        })
+        .catch(error => {
+            res.status(500).json(error) 
+        })
+});
+
 // middleware:
 
 function validateProjectId(req, res, next) {
