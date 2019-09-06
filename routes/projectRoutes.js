@@ -46,6 +46,16 @@ router.delete('/:id', validateProjectId, (req, res) => {
         })
 });
 
+router.put('/:id', validateProjectId, validateProjectPost, (req, res) => {
+    projectDb.update(req.params.id, req.body) 
+        .then(results => {
+            res.status(201).json(results)
+        })
+        .catch(error => {
+            res.status(500).json(error) 
+        })
+});
+
 
 
 // router.get('/:id', (req, res) => {
