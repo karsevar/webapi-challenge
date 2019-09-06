@@ -26,7 +26,7 @@ router.get('/:id', validateId, (req, res) => {
         })
 });
 
-router.post('/', validatePost, (req, res) => {
+router.post('/', validateProjectId, validatePost, (req, res) => {
     actionDb.insert(req.body) 
         .then(results => {
             res.status(200).json(results)
@@ -34,12 +34,22 @@ router.post('/', validatePost, (req, res) => {
         .catch(error => {
             res.status(500).json(error)
         })
-})
+});
+
+router.delete('/:id', validateId, (req, res) => {
+    actionDb.remove(req.params.id) 
+        .then(results => {
+            res.status(201).json(results)
+        })
+        .catch(error => {
+            res.status(500).json(error) 
+        })
+});
 
 
 // Middleware 
 function validatePost(req, res, next) {
-    if(req.body.notes && req.body.description) {
+    if(req.body.notes && req.body.description && req.body.project_id) {
         console.log(`Length of the description ${req.body.description.length}`)
         if(req.body.description.length <= 128) {
             next();
@@ -47,7 +57,7 @@ function validatePost(req, res, next) {
             res.status(400).json({message: "description field needs to be less than 128 characters"})
         }
     } else {
-        res.status(400).json({message: "missing required description or notes field"})
+        res.status(400).json({message: "missing required description, notes, or project id field"})
     }
 }
 
@@ -59,6 +69,17 @@ function validateId(req, res, next) {
                 next();
             } else {
                 res.status(400).json({ message: "invalid project id" })
+            }
+        })
+}
+
+function validateProjectId(req, res, next) {
+    projectDb.get(req.body.project_id) 
+        .then(results => {
+            if(results === null) {
+                res.status(400).json({message: "invalid project id"})
+            } else {
+                next();
             }
         })
 }
