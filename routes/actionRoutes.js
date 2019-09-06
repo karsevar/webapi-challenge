@@ -46,8 +46,31 @@ router.delete('/:id', validateId, (req, res) => {
         })
 });
 
+router.put('/:id', validateId, validatePut, (req, res) => {
+    actionDb.update(req.params.id, req.body) 
+        .then(results => {
+            res.status(201).json(results)
+        })
+        .catch(error => {
+            res.status(500).json(error)
+        })
+})
+
 
 // Middleware 
+function validatePut(req, res, next) {
+    if(req.body.notes && req.body.description) {
+        console.log(`Length of the description ${req.body.description.length}`)
+        if(req.body.description.length <= 128) {
+            next();
+        } else {
+            res.status(400).json({message: "description field needs to be less than 128 characters"})
+        }
+    } else {
+        res.status(400).json({message: "missing required description or notes field"})
+    } 
+}
+
 function validatePost(req, res, next) {
     if(req.body.notes && req.body.description && req.body.project_id) {
         console.log(`Length of the description ${req.body.description.length}`)
